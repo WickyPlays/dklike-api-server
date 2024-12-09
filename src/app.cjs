@@ -1,21 +1,21 @@
-import express, { Application } from "express";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
-import fs from "fs";
+const express = require("express");
+const { Database } = require("sqlite3");
+const { open } = require("sqlite");
+const { existsSync, closeSync, openSync } = require("fs");
 
-const app: Application = express();
+const app = express();
 app.use(express.json());
 
 const dbFilePath = "./src/database/charts.db";
 
 const initDB = async () => {
-  if (!fs.existsSync(dbFilePath)) {
+  if (!existsSync(dbFilePath)) {
     console.log(`Creating new database file: ${dbFilePath}`);
-    fs.closeSync(fs.openSync(dbFilePath, "w"));
+    closeSync(openSync(dbFilePath, "w"));
   }
   const db = await open({
     filename: dbFilePath,
-    driver: sqlite3.Database,
+    driver: Database,
   });
 
   await db.exec(`
@@ -149,7 +149,7 @@ app.post("/contents/:id/vote", async (req, res) => {
   res.status(200).json({ message: "Operation was successful." });
 });
 
-const updateVoteAverageScore = async (contentId: number) => {
+const updateVoteAverageScore = async (contentId) => {
   const db = await dbPromise;
   const contentVotes = await db.all(
     "SELECT score FROM votes WHERE contentId = ?",
