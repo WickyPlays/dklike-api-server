@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: ダンカグライク API Server 仕様
+  version: 0.0.1
+tags:
+  - name: support
+    description: 機能のサポート情報
+  - name: contents
+    description: コンテンツ情報
+  - name: likes
+    description: いいね情報
+paths:
+  /support:
+    get:
+      tags:
+        - support
+      summary: APIサーバーの機能一覧API
+      description: 有効なAPIサーバーの機能を返します
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contents:
+                    type: boolean
+
+  /contents:
+    get:
+      tags:
+        - contents
+      summary: コンテンツ一覧API
+      description: |
+        コンテンツ一覧を全件取得して返却します <br>
+        idの昇順。
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          example: 10
+                        contentType:
+                          type: integer
+                          enum: [0, 1, 2, 3]
+                          description: >
+                            dictionary:
+                              * 0 Songs
+                              * 1 NoteSkins
+                              * 2 SoundEffects
+                              * 3 GlobalLua
+                        title:
+                          type: string
+                        publisher:
+                          type: string
+                        date:
+                          type: string
+                          example: '1/31/2025 7:29:55 AM'
+                          format: date
+                          description: UTC時間
+                        downloadCount:
+                          type: integer
+                        voteAverageScore:
+                          type: number
+                        songInfo:
+                          type: object
+                          $ref: '#/components/schemas/SongInfo'
+        400:
+          description: Bad Request
+        500:
+          description: Internal Server Error
+
+  /contents/{id}/description:
+    get:
+      tags:
+        - contents
+      summary: コンテンツ詳細API
+      description: |
+        コンテンツ詳細を取得して返却します
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  downloadUrl:
+                    type: string
+                    description: .zipファイルのURL
+                  imageUrl:
+                    type: string
+                    description: 100x100サイズの画像
+        400:
+          description: Bad Request
+        500:
+          description: Internal Server Error
+  /contents/{id}/downloaded:
+    put:
+      tags:
+        - contents
+      summary: コンテンツのダウンロード済みAPI
+      description: コンテンツのダウンロードカウントを1増やします
+      parameters: []
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+
+  /contents/{id}/vote:
+    get:
+      tags:
+        - contents
+      summary: コンテンツ評価API
+      description: contentIdのコンテンツ評価を取得する
+      parameters: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  votes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vote'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+    post:
+      tags:
+        - contents
+      summary: コンテンツ評価API
+      description: contentIdのコンテンツを評価する
+      parameters: []
+      requestBody:
+        description: vote
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vote'
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+
+  /likes/{userId}:
+    get:
+      tags:
+        - likes
+      summary: いいね情報取得API
+      description: |
+        ユーザーのいいね履歴を取得します
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Like'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+
+    put:
+      tags:
+        - likes
+      summary: 評価のいいねAPI
+      description: |
+        評価のいいね数を1増やします <br>
+        評価のいいね対象はRequest bodyに設定されます
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentId:
+                  type: integer
+                voteUserId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+
+components:
+  schemas:
+    Vote:
+      type: object
+      properties:
+        # id:
+        #   type: integer
+        contentId:
+          type: integer
+        userId:
+          type: string
+        name:
+          type: string
+        score:
+          type: integer
+        comment:
+          type: string
+        like:
+          type: integer
+        date:
+          type: string
+          description: UTC時間
+
+    Like:
+      type: object
+      properties:
+        userId:
+          type: string
+        contentId:
+          type: integer
+        voteUserId:
+          type: string
+
+    SongInfo:
+      type: object
+      properties:
+        difficulties:
+          type: array
+          items:
+            type: integer
+          example: [0,0,0,24,29]
+        hasLua:
+          type: boolean

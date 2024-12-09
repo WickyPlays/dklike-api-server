@@ -1,0 +1,5 @@
+.DS_Store
+
+# Elastic Beanstalk CLI Files
+.elasticbeanstalk/*
+node_modules/*
