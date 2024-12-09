@@ -4,7 +4,7 @@
   "main": "src/app.cjs",
   "type": "module",
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "nodemon ./bin/www",
     "dev": "nodemon ./bin/www"
   },
   "keywords": [],
