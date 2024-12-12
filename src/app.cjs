@@ -49,6 +49,10 @@ const dbPromise = open({
 
 const successMessage = { message: "Operation was successful." };
 
+app.get("/", async (req, res) => {
+  res.status(200).send("こんにちは！ Nothing to see here!");
+});
+
 app.get("/support", async (req, res) => {
   res.status(200).json({
     contents: true
