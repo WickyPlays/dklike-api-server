@@ -1,76 +1,64 @@
 const express = require("express");
-const { Database } = require("sqlite3");
 const { open } = require("sqlite");
-const { existsSync, closeSync, openSync } = require("fs");
+const sqlite3 = require("sqlite3");
 
 const app = express();
 app.use(express.json());
 
-const dbFilePath = "./src/database/charts.db";
+const dbPromise = open({
+  filename: './src/database/charts.db',
+  driver: sqlite3.Database
+});
 
-const initDB = async () => {
-  if (!existsSync(dbFilePath)) {
-    console.log(`Creating new database file: ${dbFilePath}`);
-    closeSync(openSync(dbFilePath, "w"));
-  }
-  const db = await open({
-    filename: dbFilePath,
-    driver: Database,
-  });
+(async function initializeDatabase() {
+  const db = await dbPromise;
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS contents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      contentType INTEGER NOT NULL,
-      title TEXT,
-      publisher TEXT,
-      description TEXT,
-      downloadUrl TEXT,
-      imageUrl TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      downloadCount INTEGER DEFAULT 0,
-      voteAverageScore REAL,
-      songInfo TEXT
-    );
-  `);
+  await db.exec(`CREATE TABLE IF NOT EXISTS contents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contentType INTEGER NOT NULL,
+    title TEXT,
+    publisher TEXT,
+    description TEXT,
+    downloadUrl TEXT,
+    imageUrl TEXT,
+    date TEXT NOT NULL,
+    downloadCount INTEGER DEFAULT 0,
+    voteAverageScore REAL DEFAULT 0,
+    songInfo TEXT
+  )`);
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS votes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      contentId INTEGER NOT NULL,
-      userId TEXT NOT NULL,
-      name TEXT,
-      score INTEGER,
-      comment TEXT,
-      like INTEGER DEFAULT 0,
-      date TEXT NOT NULL,
-      FOREIGN KEY(contentId) REFERENCES contents(id)
-    );
-  `);
+  await db.exec(`CREATE TABLE IF NOT EXISTS votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contentId INTEGER NOT NULL,
+    userId TEXT NOT NULL,
+    name TEXT,
+    score INTEGER,
+    comment TEXT,
+    like INTEGER DEFAULT 0,
+    date TEXT NOT NULL,
+    FOREIGN KEY(contentId) REFERENCES contents(id)
+  )`);
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS likes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId TEXT NOT NULL,
-      contentId INTEGER NOT NULL,
-      voteUserId TEXT NOT NULL,
-      FOREIGN KEY(contentId) REFERENCES contents(id)
-    );
-  `);
+  await db.exec(`CREATE TABLE IF NOT EXISTS likes (
+    userId TEXT NOT NULL,
+    voteId INTEGER NOT NULL,
+    PRIMARY KEY(userId, voteId),
+    FOREIGN KEY(voteId) REFERENCES votes(id)
+  )`);
+})();
 
-  return db;
-};
-
-const dbPromise = initDB();
+const successMessage = { message: "Operation was successful." };
 
 app.get("/support", async (req, res) => {
-  res.status(200).json({ contents: true });
+  res.status(200).json({
+    contents: true
+  });
 });
 
 app.get("/contents", async (req, res) => {
   const db = await dbPromise;
-  const contents = await db.all("SELECT * FROM contents");
-  const list = contents.map((c) => ({
+  const contents = await db.all(`SELECT * FROM contents`);
+  const list = contents.map(c => ({
     id: c.id,
     contentType: c.contentType,
     title: c.title,
@@ -78,124 +66,121 @@ app.get("/contents", async (req, res) => {
     date: c.date,
     downloadCount: c.downloadCount,
     voteAverageScore: c.voteAverageScore,
-    songInfo: c.songInfo ? JSON.parse(c.songInfo) : null,
+    songInfo: JSON.parse(c.songInfo || '{}')
   }));
   res.status(200).json({ contents: list });
 });
 
 app.get("/contents/:id", async (req, res) => {
-  const db = await dbPromise;
   const id = req.params.id;
-  const content = await db.get("SELECT * FROM contents WHERE id = ?", id);
+  const db = await dbPromise;
+  const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
   res.status(200).json({ contents: content });
 });
 
 app.get("/contents/:id/description", async (req, res) => {
-  const db = await dbPromise;
   const id = req.params.id;
-  const content = await db.get(
-    "SELECT description, downloadUrl, imageUrl FROM contents WHERE id = ?",
-    id
-  );
+  const db = await dbPromise;
+  const content = await db.get(`SELECT description, downloadUrl, imageUrl FROM contents WHERE id = ?`, [id]);
   res.status(200).json(content);
 });
 
 app.put("/contents/:id/downloaded", async (req, res) => {
-  const db = await dbPromise;
   const id = req.params.id;
-  await db.run(
-    "UPDATE contents SET downloadCount = downloadCount + 1 WHERE id = ?",
-    id
-  );
-  res.status(200).json({ message: "Operation was successful." });
+  const db = await dbPromise;
+  try {
+    await db.run(`UPDATE contents SET downloadCount = downloadCount + 1 WHERE id = ?`, [id]);
+    res.status(200).send(successMessage);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 app.get("/votes", async (req, res) => {
   const db = await dbPromise;
-  const votes = await db.all("SELECT * FROM votes");
+  const votes = await db.all(`SELECT * FROM votes`);
   res.status(200).json({ votes });
 });
 
 app.get("/contents/:id/vote", async (req, res) => {
-  const db = await dbPromise;
   const id = req.params.id;
-  const votes = await db.all("SELECT * FROM votes WHERE contentId = ?", id);
+  const db = await dbPromise;
+  const votes = await db.all(`SELECT * FROM votes WHERE contentId = ?`, [id]);
   res.status(200).json({ votes });
 });
 
 app.post("/contents/:id/vote", async (req, res) => {
-  const db = await dbPromise;
   const contentId = req.params.id;
-  const { userId, name, score, comment, like, date } = req.body;
+  const db = await dbPromise;
+  try {
+    await db.run(`INSERT INTO votes (contentId, userId, name, score, comment, like, date) VALUES (?, ?, ?, ?, ?, ?, ?)`, [
+      contentId,
+      req.body.userId,
+      req.body.name,
+      req.body.score,
+      req.body.comment,
+      req.body.like || 0,
+      req.body.date
+    ]);
+    res.status(200).send(successMessage);
+    updateVoteAverageScore(contentId);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-  await db.run(
-    `INSERT INTO votes (contentId, userId, name, score, comment, like, date)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(userId) DO UPDATE SET
-       score = excluded.score,
-       comment = excluded.comment,
-       like = excluded.like,
-       date = excluded.date`,
-    contentId,
-    userId,
-    name,
-    score,
-    comment,
-    like,
-    date
-  );
-
-  updateVoteAverageScore(Number(contentId));
-  res.status(200).json({ message: "Operation was successful." });
+app.put("/contents/:id/vote", async (req, res) => {
+  const contentId = req.params.id;
+  const voteId = req.body.id;
+  const db = await dbPromise;
+  try {
+    await db.run(`UPDATE votes SET name = ?, score = ?, comment = ?, like = 0, date = ? WHERE id = ? AND userId = ?`, [
+      req.body.name,
+      req.body.score,
+      req.body.comment,
+      req.body.date,
+      voteId,
+      req.body.userId
+    ]);
+    await db.run(`DELETE FROM likes WHERE voteId = ?`, [voteId]);
+    res.status(200).send(successMessage);
+    updateVoteAverageScore(contentId);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 const updateVoteAverageScore = async (contentId) => {
   const db = await dbPromise;
-  const contentVotes = await db.all(
-    "SELECT score FROM votes WHERE contentId = ?",
-    contentId
-  );
-
-  if (contentVotes.length === 0) return;
-
-  const total = contentVotes.reduce((acc, v) => acc + v.score, 0);
-  const averageScore = total / contentVotes.length;
-  await db.run(
-    "UPDATE contents SET voteAverageScore = ? WHERE id = ?",
-    averageScore,
-    contentId
-  );
+  const votes = await db.all(`SELECT score FROM votes WHERE contentId = ?`, [contentId]);
+  if (votes.length === 0) return;
+  const total = votes.reduce((sum, v) => sum + v.score, 0);
+  const averageScore = total / votes.length;
+  await db.run(`UPDATE contents SET voteAverageScore = ? WHERE id = ?`, [averageScore, contentId]);
 };
 
 app.get("/likes/:userId", async (req, res) => {
-  const db = await dbPromise;
   const userId = req.params.userId;
-  const likes = await db.all("SELECT * FROM likes WHERE userId = ?", userId);
+  const db = await dbPromise;
+  const likes = await db.all(`SELECT * FROM likes WHERE userId = ?`, [userId]);
   res.status(200).json({ likes });
 });
 
 app.put("/likes/:userId", async (req, res) => {
-  const db = await dbPromise;
+  const voteId = req.body.voteId;
   const userId = req.params.userId;
-  const { contentId, voteUserId } = req.body;
-
-  await db.run(
-    "INSERT INTO likes (userId, contentId, voteUserId) VALUES (?, ?, ?)",
-    userId,
-    contentId,
-    voteUserId
-  );
-  await db.run(
-    "UPDATE votes SET like = like + 1 WHERE contentId = ? AND userId = ?",
-    contentId,
-    voteUserId
-  );
-
-  res.status(200).json({ message: "Operation was successful." });
+  const db = await dbPromise;
+  try {
+    await db.run(`INSERT INTO likes (userId, voteId) VALUES (?, ?)`, [userId, voteId]);
+    await db.run(`UPDATE votes SET like = like + 1 WHERE id = ?`, [voteId]);
+    res.status(200).send(successMessage);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 const EXPRESS_PORT = process.env.PORT || 3000;
 
 app.listen(EXPRESS_PORT, () => {
-  console.log("Server is running");
+  console.log("server running");
 });
