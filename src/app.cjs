@@ -1,9 +1,14 @@
 const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
+const path = require("path");
 
 const app = express();
 app.use(express.json());
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
 const dbPromise = open({
   filename: './src/database/charts.db',
@@ -50,7 +55,19 @@ const dbPromise = open({
 const successMessage = { message: "Operation was successful." };
 
 app.get("/", async (req, res) => {
-  res.status(200).send("こんにちは！ Nothing to see here!");
+  const db = await dbPromise;
+  const contents = await db.all(`SELECT * FROM contents`);
+  const list = contents.map(c => ({
+    id: c.id,
+    contentType: c.contentType,
+    title: c.title,
+    publisher: c.publisher,
+    date: c.date,
+    downloadCount: c.downloadCount,
+    voteAverageScore: c.voteAverageScore,
+    songInfo: JSON.parse(c.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}')
+  }));
+  res.render("main", { contents: list });
 });
 
 app.get("/support", async (req, res) => {
