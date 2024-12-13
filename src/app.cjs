@@ -144,6 +144,12 @@ app.get("/", async (req, res) => {
   res.render("main", { contents: contentsWithFormattedDate });
 });
 
+app.get('/support', (req, res) => {
+  res.status(200).json({
+    contents: true
+  });
+});
+
 app.get("/contents", async (req, res) => {
   const db = await dbPromise;
   const contents = await db.all(`SELECT * FROM contents`);
