@@ -14,12 +14,14 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
+let GOOGLE_KEY = `-----BEGIN PRIVATE KEY-----\n${process.env.PRIVATE_KEY}\n-----END PRIVATE KEY-----\n`;
+
 const auth = new google.auth.GoogleAuth({
   credentials: {
     type: process.env.TYPE,
     project_id: process.env.PROJECT_ID,
     private_key_id: process.env.PRIVATE_KEY_ID,
-    private_key: process.env.PRIVATE_KEY,
+    private_key: GOOGLE_KEY,
     client_email: process.env.CLIENT_EMAIL,
     client_id: process.env.CLIENT_ID,
     auth_uri: "https://accounts.google.com/o/oauth2/auth",
