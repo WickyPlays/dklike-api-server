@@ -91,8 +91,6 @@ async function syncSpreadsheetToDatabase() {
 
     const rows = response.data.values;
 
-    console.log(rows[0])
-
     if (!rows || rows.length === 0) {
       console.log("No data found in the spreadsheet.");
       return;
