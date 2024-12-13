@@ -4,3 +4,4 @@
 .elasticbeanstalk/*
 node_modules/*
 .env
+.data
