@@ -65,7 +65,8 @@ app.get("/", async (req, res) => {
     date: c.date,
     downloadCount: c.downloadCount,
     voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}')
+    songInfo: JSON.parse(c.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}'),
+    downloadUrl: c.downloadUrl
   }));
   res.render("main", { contents: list });
 });

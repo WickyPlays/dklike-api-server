@@ -37,10 +37,11 @@
                 Downloads <span class="sort-arrow"></span>
               </th>
               <th class="sortable numeric">
-                Avg score <span class="sort-arrow"></span>
+                Score <span class="sort-arrow"></span>
               </th>
               <th>Difficulty</th>
-              <th class="sortable">Has Lua <span class="sort-arrow"></span></th>
+              <th class="sortable">Lua <span class="sort-arrow"></span></th>
+              <th>Link</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +82,9 @@
                 </span>
               </td>
               <td><%= content.songInfo.hasLua ? "Yes" : "No" %></td>
+              <td>
+                <button class="button btn-download is-link" onclick="window.location.href='<%= content.downloadUrl %>'">Download</button>
+              </td>
             </tr>
             <% }); %>
           </tbody>

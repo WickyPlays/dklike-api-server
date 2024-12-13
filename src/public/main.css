@@ -96,6 +96,11 @@ th.sortable.sorted-desc .sort-arrow {
   background-color: #9c27b0;
 }
 
+.btn-download {
+  font-size: 13px;
+  padding: 5px 10px;
+}
+
 @media screen and (max-width: 768px) {
   .title {
     font-size: 20px;
