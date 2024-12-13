@@ -67,7 +67,6 @@ const dbPromise = open({
 
 const successMessage = { message: "Operation was successful." };
 
-// Synchronize spreadsheet data with database
 async function syncSpreadsheetToDatabase() {
   const db = await dbPromise;
   try {
@@ -83,13 +82,23 @@ async function syncSpreadsheetToDatabase() {
       return;
     }
 
-    await db.run("DELETE FROM contents");
-
     for (const row of rows) {
       const [id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo] = row;
 
       await db.run(
-        `INSERT INTO contents (id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO contents (id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+         contentType = excluded.contentType,
+         title = excluded.title,
+         publisher = excluded.publisher,
+         description = excluded.description,
+         downloadUrl = excluded.downloadUrl,
+         imageUrl = excluded.imageUrl,
+         date = excluded.date,
+         downloadCount = excluded.downloadCount,
+         voteAverageScore = excluded.voteAverageScore,
+         songInfo = excluded.songInfo`,
         [
           Number(id),
           Number(contentType),
