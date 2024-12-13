@@ -2,6 +2,10 @@ const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const path = require("path");
+const { google } = require("googleapis");
+const cron = require("node-cron");
+
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
@@ -10,9 +14,29 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
+const auth = new google.auth.GoogleAuth({
+  credentials: {
+    type: process.env.TYPE,
+    project_id: process.env.PROJECT_ID,
+    private_key_id: process.env.PRIVATE_KEY_ID,
+    private_key: process.env.PRIVATE_KEY,
+    client_email: process.env.CLIENT_EMAIL,
+    client_id: process.env.CLIENT_ID,
+    auth_uri: "https://accounts.google.com/o/oauth2/auth",
+    token_uri: "https://oauth2.googleapis.com/token",
+    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+    client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+  },
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+});
+
+const sheets = google.sheets({ version: "v4", auth });
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const SHEET_NAME = "Charts";
+
 const dbPromise = open({
-  filename: './src/database/charts.db',
-  driver: sqlite3.Database
+  filename: "./src/database/charts.db",
+  driver: sqlite3.Database,
 });
 
 (async function initializeDatabase() {
@@ -54,10 +78,62 @@ const dbPromise = open({
 
 const successMessage = { message: "Operation was successful." };
 
+// Synchronize spreadsheet data with database
+async function syncSpreadsheetToDatabase() {
+  const db = await dbPromise;
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A2:K`, // Skip the first row
+    });
+
+    const rows = response.data.values;
+
+    console.log(rows[0])
+
+    if (!rows || rows.length === 0) {
+      console.log("No data found in the spreadsheet.");
+      return;
+    }
+
+    await db.run("DELETE FROM contents");
+
+    for (const row of rows) {
+      const [id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo] = row;
+
+      await db.run(
+        `INSERT INTO contents (id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          contentType,
+          title,
+          publisher,
+          description,
+          downloadUrl,
+          imageUrl,
+          date,
+          downloadCount || 0,
+          voteAverageScore || 0,
+          songInfo || null,
+        ]
+      );
+    }
+
+    console.log("Spreadsheet data successfully synchronized with the database.");
+  } catch (error) {
+    console.error("Error synchronizing spreadsheet to database:", error);
+  }
+}
+
+syncSpreadsheetToDatabase();
+
+// Schedule synchronization every 30 minutes
+cron.schedule("*/30 * * * *", syncSpreadsheetToDatabase);
+
 app.get("/", async (req, res) => {
   const db = await dbPromise;
   const contents = await db.all(`SELECT * FROM contents`);
-  const list = contents.map(c => ({
+  const list = contents.map((c) => ({
     id: c.id,
     contentType: c.contentType,
     title: c.title,
@@ -66,38 +142,22 @@ app.get("/", async (req, res) => {
     downloadCount: c.downloadCount,
     voteAverageScore: c.voteAverageScore,
     songInfo: JSON.parse(c.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}'),
-    downloadUrl: c.downloadUrl
+    downloadUrl: c.downloadUrl,
   }));
   res.render("main", { contents: list });
-});
-
-app.get("/support", async (req, res) => {
-  res.status(200).json({
-    contents: true
-  });
 });
 
 app.get("/contents", async (req, res) => {
   const db = await dbPromise;
   const contents = await db.all(`SELECT * FROM contents`);
-  const list = contents.map(c => ({
-    id: c.id,
-    contentType: c.contentType,
-    title: c.title,
-    publisher: c.publisher,
-    date: c.date,
-    downloadCount: c.downloadCount,
-    voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{}')
-  }));
-  res.status(200).json({ contents: list });
+  res.status(200).json({ contents });
 });
 
 app.get("/contents/:id", async (req, res) => {
   const id = req.params.id;
   const db = await dbPromise;
   const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
-  res.status(200).json({ contents: content });
+  res.status(200).json({ content });
 });
 
 app.get("/contents/:id/description", async (req, res) => {

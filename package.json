@@ -16,8 +16,11 @@
     "nodemon": "^3.1.7"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
+    "googleapis": "^144.0.0",
     "jsx": "^0.9.89",
+    "node-cron": "^3.0.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   }
