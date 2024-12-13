@@ -26,7 +26,7 @@ const dbPromise = open({
     description TEXT,
     downloadUrl TEXT,
     imageUrl TEXT,
-    date TEXT NOT NULL,
+    date DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     downloadCount INTEGER DEFAULT 0,
     voteAverageScore REAL DEFAULT 0,
     songInfo TEXT
