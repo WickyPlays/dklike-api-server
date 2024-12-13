@@ -91,16 +91,16 @@ async function syncSpreadsheetToDatabase() {
       await db.run(
         `INSERT INTO contents (id, contentType, title, publisher, description, downloadUrl, imageUrl, date, downloadCount, voteAverageScore, songInfo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id,
-          contentType,
+          Number(id),
+          Number(contentType),
           title,
           publisher,
           description,
           downloadUrl,
           imageUrl,
-          date,
-          downloadCount || 0,
-          voteAverageScore || 0,
+          new Date(date).toISOString(),
+          Number(downloadCount || 0),
+          Number(voteAverageScore || 0),
           songInfo || null,
         ]
       );
@@ -117,34 +117,45 @@ syncSpreadsheetToDatabase();
 // Schedule synchronization every 30 minutes
 cron.schedule("*/30 * * * *", syncSpreadsheetToDatabase);
 
+function transformContent(content) {
+  return {
+    id: Number(content.id),
+    contentType: Number(content.contentType),
+    title: content.title,
+    publisher: content.publisher,
+    description: content.description,
+    downloadUrl: content.downloadUrl,
+    imageUrl: content.imageUrl,
+    date: new Date(content.date),
+    downloadCount: Number(content.downloadCount),
+    voteAverageScore: Number(content.voteAverageScore),
+    songInfo: JSON.parse(content.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}')
+  };
+}
+
 app.get("/", async (req, res) => {
   const db = await dbPromise;
   const contents = await db.all(`SELECT * FROM contents`);
-  const list = contents.map((c) => ({
-    id: c.id,
-    contentType: c.contentType,
-    title: c.title,
-    publisher: c.publisher,
-    date: c.date,
-    downloadCount: c.downloadCount,
-    voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}'),
-    downloadUrl: c.downloadUrl,
+  const list = contents.map(transformContent);
+  const contentsWithFormattedDate = list.map(content => ({
+    ...content,
+    date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
   }));
-  res.render("main", { contents: list });
+  res.render("main", { contents: contentsWithFormattedDate });
 });
 
 app.get("/contents", async (req, res) => {
   const db = await dbPromise;
   const contents = await db.all(`SELECT * FROM contents`);
-  res.status(200).json({ contents });
+  const list = contents.map(transformContent);
+  res.status(200).json({ contents: list });
 });
 
 app.get("/contents/:id", async (req, res) => {
   const id = req.params.id;
   const db = await dbPromise;
   const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
-  res.status(200).json({ content });
+  res.status(200).json({ content: transformContent(content) });
 });
 
 app.get("/contents/:id/description", async (req, res) => {
