@@ -1,0 +1,23 @@
+{
+  "name": "dklike-api-server",
+  "version": "1.0.0",
+  "main": "src/app.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon ./bin/www",
+    "dev": "nodemon ./bin/www"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.7"
+  },
+  "dependencies": {
+    "jsx": "^0.9.89",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
