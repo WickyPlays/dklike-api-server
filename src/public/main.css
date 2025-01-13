@@ -1,0 +1,115 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+}
+
+.title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  font-size: 25px;
+}
+
+#search {
+  background-color: #434343;
+  color: #fff;
+}
+
+#resultCount {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+}
+
+th {
+  cursor: pointer;
+}
+
+th .sort-arrow {
+  font-size: 12px;
+  color: #888;
+  margin-left: 5px;
+  display: inline-block;
+}
+
+th.sortable.sorted-asc .sort-arrow:before {
+  content: "▲";
+}
+
+th.sortable.sorted-desc .sort-arrow:before {
+  content: "▼";
+}
+
+th.sortable .sort-arrow {
+  visibility: hidden;
+}
+
+th.sortable.sorted-asc .sort-arrow,
+th.sortable.sorted-desc .sort-arrow {
+  visibility: visible;
+}
+
+.difficulty {
+  display: flex;
+}
+
+.diff {
+  min-width: 30px;
+  min-height: 30px;
+  max-width: 30px;
+  max-height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  gap: 0;
+}
+
+#diff-easy {
+  background-color: #4caf50;
+}
+
+#diff-normal {
+  background-color: #2196f3;
+}
+
+#diff-hard {
+  background-color: #ffc107;
+}
+
+#diff-extra {
+  background-color: #ff5722;
+}
+
+#diff-lunatic {
+  background-color: #9c27b0;
+}
+
+.btn-download {
+  font-size: 13px;
+  padding: 5px 10px;
+}
+
+@media screen and (max-width: 768px) {
+  .title {
+    font-size: 20px;
+  }
+}

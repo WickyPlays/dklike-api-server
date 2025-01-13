@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home | DankaguLike Server</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
+    />
+    <link rel="stylesheet" href="/main.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <div class="container mt-6 px-4">
+      <div class="title-container">
+        <h1 class="title">DankaguLike Server</h1>
+        <div></div>
+      </div>
+      <input
+        type="text"
+        id="search"
+        class="input mb-4"
+        placeholder="Search for an item..."
+      />
+      <p id="resultCount">Searched <%= contents.length %> result(s)</p>
+
+      <div class="table-wrapper">
+        <table class="table is-striped is-fullwidth">
+          <thead>
+            <tr>
+              <th class="sortable">ID <span class="sort-arrow"></span></th>
+              <th class="sortable">Type <span class="sort-arrow"></span></th>
+              <th class="sortable">Title <span class="sort-arrow"></span></th>
+              <th class="sortable">
+                Publisher <span class="sort-arrow"></span>
+              </th>
+              <th class="sortable numeric">
+                Date <span class="sort-arrow"></span>
+              </th>
+              <th class="sortable numeric">
+                Downloads <span class="sort-arrow"></span>
+              </th>
+              <th class="sortable numeric">
+                Score <span class="sort-arrow"></span>
+              </th>
+              <th>Difficulty</th>
+              <th class="sortable">Lua <span class="sort-arrow"></span></th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% contents.forEach(content => { %>
+            <tr>
+              <td><%= content.id %></td>
+              <td>
+                <%= content.contentType === 0 ? "Songs" : content.contentType
+                === 1 ? "NoteSkins" : content.contentType === 2 ? "SoundEffects"
+                : content.contentType === 3 ? "GlobalLua" : "Unknown" %>
+              </td>
+              <td><%= content.title %></td>
+              <td><%= content.publisher %></td>
+              <td style="white-space: nowrap"><%= content.date %></td>
+              <td><%= content.downloadCount %></td>
+              <td><%= content.voteAverageScore %></td>
+              <td class="difficulty">
+                <span class="diff" id="diff-easy">
+                  <% if (content.songInfo.difficulties[0] === -1) { %>X<% } else
+                  { %><%= content.songInfo.difficulties[0] %><% } %>
+                </span>
+                <span class="diff" id="diff-normal">
+                  <% if (content.songInfo.difficulties[1] === -1) { %>X<% } else
+                  { %><%= content.songInfo.difficulties[1] %><% } %>
+                </span>
+                <span class="diff" id="diff-hard">
+                  <% if (content.songInfo.difficulties[2] === -1) { %>X<% } else
+                  { %><%= content.songInfo.difficulties[2] %><% } %>
+                </span>
+                <span class="diff" id="diff-extra">
+                  <% if (content.songInfo.difficulties[3] === -1) { %>X<% } else
+                  { %><%= content.songInfo.difficulties[3] %><% } %>
+                </span>
+                <span class="diff" id="diff-lunatic">
+                  <% if (content.songInfo.difficulties[4] === -1) { %>X<% } else
+                  { %><%= content.songInfo.difficulties[4] %><% } %>
+                </span>
+              </td>
+              <td><%= content.songInfo.hasLua ? "Yes" : "No" %></td>
+              <td>
+                <button
+                  class="button btn-download is-link"
+                  onclick="window.location.href='<%= content.downloadUrl %>'"
+                >
+                  Download
+                </button>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="./main.js"></script>
+  </body>
+</html>

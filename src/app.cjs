@@ -1,9 +1,14 @@
 const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
+const path = require("path");
 
 const app = express();
 app.use(express.json());
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
+
 
 const dbPromise = open({
   filename: './src/database/charts.db',
@@ -49,8 +54,31 @@ const dbPromise = open({
 
 const successMessage = { message: "Operation was successful." };
 
+function transformContent(content) {
+  return {
+    id: Number(content.id),
+    contentType: Number(content.contentType),
+    title: content.title,
+    publisher: content.publisher,
+    description: content.description,
+    downloadUrl: content.downloadUrl,
+    imageUrl: content.imageUrl,
+    date: new Date(content.date),
+    downloadCount: Number(content.downloadCount),
+    voteAverageScore: Number(content.voteAverageScore),
+    songInfo: JSON.parse(content.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}')
+  };
+}
+
 app.get("/", async (req, res) => {
-  res.status(200).send("こんにちは！ Nothing to see here!");
+  const db = await dbPromise;
+  const contents = await db.all(`SELECT * FROM contents`);
+  const list = contents.map(transformContent);
+  const contentsWithFormattedDate = list.map(content => ({
+    ...content,
+    date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
+  }));
+  res.render("main", { contents: contentsWithFormattedDate });
 });
 
 app.get("/support", async (req, res) => {
