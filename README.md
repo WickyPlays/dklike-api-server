@@ -1,8 +1,8 @@
 Hi, Wicky here!
 
-Welcome to DKLike API Server
+Welcome to DKLike API Server template!
 
-Ver. 1.0.0
+Ver. 1.0.1
 
 ## About DankaguLike
 
