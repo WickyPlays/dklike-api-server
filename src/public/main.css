@@ -7,16 +7,30 @@ h1 {
 }
 
 .title-container {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 3fr 2fr 1fr;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 10px;
+  width: 100%;
 }
 
 .title {
-  font-family: Arial, Helvetica, sans-serif;
   color: #fff;
   font-size: 25px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 !important;
+}
+
+.title-tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 #search {
@@ -25,9 +39,13 @@ h1 {
 }
 
 #resultCount {
+  display: inline-block;
   color: #fff;
-  font-size: 20px;
+  font-size: 15px;
   margin-bottom: 20px;
+  background-color: #00749b;
+  padding: 2px 10px;
+  border-radius: 10px;
 }
 
 .table-wrapper {
@@ -41,6 +59,8 @@ table {
 
 th {
   cursor: pointer;
+  padding: 5px !important;
+  max-height: 30px !important;
 }
 
 th .sort-arrow {
@@ -48,6 +68,12 @@ th .sort-arrow {
   color: #888;
   margin-left: 5px;
   display: inline-block;
+}
+
+th.sortable {
+  box-sizing: border-box;
+  margin: 0;
+  text-align: center;
 }
 
 th.sortable.sorted-asc .sort-arrow:before {

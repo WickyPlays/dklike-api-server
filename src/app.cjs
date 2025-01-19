@@ -2,13 +2,13 @@ const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const path = require("path");
+const { convertLinkToDownloadable } = require("./converter.cjs");
 
 const app = express();
 app.use(express.json());
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
-
 
 const dbPromise = open({
   filename: './src/database/charts.db',
@@ -61,7 +61,7 @@ function transformContent(content) {
     title: content.title,
     publisher: content.publisher,
     description: content.description,
-    downloadUrl: content.downloadUrl,
+    downloadUrl: convertLinkToDownloadable(content.downloadUrl),
     imageUrl: content.imageUrl,
     date: new Date(content.date),
     downloadCount: Number(content.downloadCount),
@@ -98,7 +98,8 @@ app.get("/contents", async (req, res) => {
     date: c.date,
     downloadCount: c.downloadCount,
     voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{}')
+    songInfo: JSON.parse(c.songInfo || '{}'),
+    downloadUrl: convertLinkToDownloadable(c.downloadUrl)
   }));
   res.status(200).json({ contents: list });
 });
@@ -107,6 +108,9 @@ app.get("/contents/:id", async (req, res) => {
   const id = req.params.id;
   const db = await dbPromise;
   const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
+  if (content) {
+    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
+  }
   res.status(200).json({ contents: content });
 });
 
@@ -114,6 +118,9 @@ app.get("/contents/:id/description", async (req, res) => {
   const id = req.params.id;
   const db = await dbPromise;
   const content = await db.get(`SELECT description, downloadUrl, imageUrl FROM contents WHERE id = ?`, [id]);
+  if (content) {
+    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
+  }
   res.status(200).json(content);
 });
 

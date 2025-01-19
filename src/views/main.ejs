@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home | DankaguLike Server</title>
+    <title>Home | DankaguLike EN charts</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
@@ -12,21 +12,41 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
-    <div class="container mt-6 px-4">
+    <div class="container mt-5 px-4">
       <div class="title-container">
-        <h1 class="title">DankaguLike Server</h1>
-        <div></div>
+        <h1 class="title">DankaguLike English charts</h1>
+        <div class="search-container">
+          <div class="select search-options">
+            <select id="searchBy" class="select">
+              <option value="name">By Name</option>
+              <option value="publisher">By Publisher</option>
+            </select>
+          </div>
+          <input
+            type="text"
+            id="search"
+            class="input"
+            placeholder="Search for an item..."
+          />
+        </div>
+        <div class="title-tools">
+          <a href="/distribution" target="_blank" class="button is-info"
+            >View distribution</a
+          >
+          <a
+            target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1PeaP2J8wSOittu1ocdCC-AQNb6ph6QHnBl7g1Xfz_Ig/edit?gid=1184683173#gid=1184683173"
+            class="button is-primary"
+            id="btn-submit"
+            >Request new chart</a
+          >
+        </div>
       </div>
-      <input
-        type="text"
-        id="search"
-        class="input mb-4"
-        placeholder="Search for an item..."
-      />
+
       <p id="resultCount">Searched <%= contents.length %> result(s)</p>
 
       <div class="table-wrapper">
-        <table class="table is-striped is-fullwidth">
+        <table class="table is-striped">
           <thead>
             <tr>
               <th class="sortable">ID <span class="sort-arrow"></span></th>
