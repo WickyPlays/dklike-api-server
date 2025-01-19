@@ -1,6 +1,6 @@
 {
   "name": "dklike-api-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "src/app.cjs",
   "type": "module",
   "scripts": {
