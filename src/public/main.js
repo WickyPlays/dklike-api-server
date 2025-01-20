@@ -58,4 +58,19 @@ $(document).ready(function () {
 
     $("#resultCount").text(`Searched ${resultCount} result(s)`);
   });
+
+  $('#search').on('input', function () {
+    const searchBy = $('#searchBy').val();
+    const searchTerm = $(this).val().toLowerCase();
+
+    $('tbody tr').each(function () {
+      const name = $(this).find('td:nth-child(3)').text().toLowerCase();
+      const publisher = $(this).find('td:nth-child(4)').text().toLowerCase();
+      
+      const match = (searchBy === 'name' && name.includes(searchTerm)) ||
+                    (searchBy === 'publisher' && publisher.includes(searchTerm));
+
+      $(this).toggle(match);
+    });
+  });
 });
