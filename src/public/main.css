@@ -1,9 +1,19 @@
 body {
   font-family: Arial, sans-serif;
+  max-width: 100vw;
+  box-sizing: content-box !important;
+  overflow-x: hidden;
+  margin-top: 1rem;
+  padding: 0 1rem;
 }
 
 h1 {
   color: #333;
+}
+
+.container {
+  box-sizing: border-box !important;
+  max-width: 100vw !important;
 }
 
 .title-container {
@@ -12,6 +22,7 @@ h1 {
   align-items: center;
   gap: 10px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .title {
@@ -55,6 +66,7 @@ h1 {
 
 table {
   width: 100%;
+  margin-bottom: 100px;
 }
 
 th {
@@ -134,8 +146,31 @@ th.sortable.sorted-desc .sort-arrow {
   padding: 5px 10px;
 }
 
+.text-unavailable {
+  color: #808080;
+  text-align: center;
+}
+
 @media screen and (max-width: 768px) {
   .title {
     font-size: 20px;
+    text-align: center;
+  }
+
+  .title-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .title-tools {
+    margin-bottom: 25px;
   }
 }

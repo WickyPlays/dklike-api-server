@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home | DankaguLike charts</title>
+    <title>Home | DankaguLike EN charts</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
@@ -12,9 +12,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
-    <div class="container mt-5 px-4">
+    <div class="container">
       <div class="title-container">
-        <h1 class="title">DankaguLike charts</h1>
+        <h1 class="title">DankaguLike English charts</h1>
         <div class="search-container">
           <div class="select search-options">
             <select id="searchBy" class="select">
@@ -29,7 +29,18 @@
             placeholder="Search for an item..."
           />
         </div>
-        <div class="title-tools"></div>
+        <div class="title-tools">
+          <a href="/distribution" target="_blank" class="button is-info"
+            >View distribution</a
+          >
+          <a
+            target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1PeaP2J8wSOittu1ocdCC-AQNb6ph6QHnBl7g1Xfz_Ig/edit?gid=1184683173#gid=1184683173"
+            class="button is-primary"
+            id="btn-submit"
+            >Request new chart</a
+          >
+        </div>
       </div>
 
       <p id="resultCount">Searched <%= contents.length %> result(s)</p>
@@ -72,6 +83,7 @@
               <td style="white-space: nowrap"><%= content.date %></td>
               <td><%= content.downloadCount %></td>
               <td><%= content.voteAverageScore %></td>
+              <% if (content.contentType === 0) { %>
               <td class="difficulty">
                 <span class="diff" id="diff-easy">
                   <% if (content.songInfo.difficulties[0] === -1) { %>X<% } else
@@ -94,6 +106,9 @@
                   { %><%= content.songInfo.difficulties[4] %><% } %>
                 </span>
               </td>
+              <% } else { %>
+              <td><p class="text-unavailable">Unavailable</p></td>
+              <% } %>
               <td><%= content.songInfo.hasLua ? "Yes" : "No" %></td>
               <td>
                 <button
