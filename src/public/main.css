@@ -4,7 +4,7 @@ body {
   box-sizing: content-box !important;
   overflow-x: hidden;
   margin-top: 1rem;
-  padding: 0 1rem;
+  padding: 0 5rem;
 }
 
 h1 {
@@ -151,7 +151,11 @@ th.sortable.sorted-desc .sort-arrow {
   text-align: center;
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1000px) {
+  body {
+    padding: 0 1rem;
+  }
+
   .title {
     font-size: 20px;
     text-align: center;
@@ -172,5 +176,13 @@ th.sortable.sorted-desc .sort-arrow {
 
   .title-tools {
     margin-bottom: 25px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .title-tools {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 }
