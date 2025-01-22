@@ -14,7 +14,7 @@
   <body>
     <div class="container">
       <div class="title-container">
-        <h1 class="title">DankaguLike English charts</h1>
+        <h1 class="title">DankaguLike charts</h1>
         <div class="search-container">
           <div class="select search-options">
             <select id="searchBy" class="select">
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <p id="resultCount">Searched <%= contents.length %> result(s)</p>
+      <p id="resultCount">Total charts: <%= totalCount %> result(s)</p>
 
       <div class="table-wrapper">
         <table class="table is-striped">
@@ -122,6 +122,57 @@
             <% }); %>
           </tbody>
         </table>
+      </div>
+
+      <div
+        class="pagination is-centered"
+        role="navigation"
+        aria-label="pagination"
+      >
+        <% if (currentPage > 1) { %>
+        <a class="pagination-previous" href="?page=<%= currentPage - 1 %>"
+          >Previous</a
+        >
+        <% } else { %>
+        <a class="pagination-previous" disabled>Previous</a>
+        <% } %> <% if (currentPage < totalPages) { %>
+        <a class="pagination-next" href="?page=<%= currentPage + 1 %>">Next</a>
+        <% } else { %>
+        <a class="pagination-next" disabled>Next</a>
+        <% } %>
+
+        <ul class="pagination-list">
+          <li>
+            <a
+              class="pagination-link <%= currentPage === 1 ? 'is-current' : '' %>"
+              href="?page=1"
+              >1</a
+            >
+          </li>
+
+          <% if (totalPages > 2) { %>
+          <li><span class="pagination-ellipsis">&hellip;</span></li>
+          <li>
+            <input
+              type="number"
+              class="input pagination-input"
+              value="<%= currentPage %>"
+              min="1"
+              max="<%= totalPages %>"
+              onkeydown="if(event.key === 'Enter') window.location.href='?page=' + this.value"
+            />
+          </li>
+          <li><span class="pagination-ellipsis">&hellip;</span></li>
+          <% } %> <% if (totalPages >= 2) { %>
+          <li>
+            <a
+              class="pagination-link <%= currentPage === totalPages ? 'is-current' : '' %>"
+              href="?page=<%= totalPages %>"
+              ><%= totalPages %></a
+            >
+          </li>
+          <% } %>
+        </ul>
       </div>
     </div>
     <script src="./main.js"></script>

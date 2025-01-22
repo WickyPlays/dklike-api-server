@@ -66,7 +66,6 @@ h1 {
 
 table {
   width: 100%;
-  margin-bottom: 100px;
 }
 
 th {
@@ -149,6 +148,11 @@ th.sortable.sorted-desc .sort-arrow {
 .text-unavailable {
   color: #808080;
   text-align: center;
+}
+
+.pagination {
+  margin-top: 30px;
+  margin-bottom: 100px;
 }
 
 @media screen and (max-width: 1000px) {

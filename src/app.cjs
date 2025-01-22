@@ -72,13 +72,30 @@ function transformContent(content) {
 
 app.get("/", async (req, res) => {
   const db = await dbPromise;
-  const contents = await db.all(`SELECT * FROM contents`);
+  
+  // Get the current page from the query string, default to 1
+  const page = parseInt(req.query.page) || 1;
+  const itemsPerPage = 15;
+  const offset = (page - 1) * itemsPerPage;
+
+  // Fetch the total number of contents
+  const totalContents = await db.get(`SELECT COUNT(*) AS count FROM contents`);
+  const totalPages = Math.ceil(totalContents.count / itemsPerPage);
+
+  // Fetch the current page of contents
+  const contents = await db.all(`SELECT * FROM contents LIMIT ? OFFSET ?`, [itemsPerPage, offset]);
   const list = contents.map(transformContent);
   const contentsWithFormattedDate = list.map(content => ({
     ...content,
     date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
   }));
-  res.render("main", { contents: contentsWithFormattedDate });
+
+  res.render("main", {
+    contents: contentsWithFormattedDate,
+    currentPage: page,
+    totalPages: totalPages,
+    totalCount: totalContents.count
+  });
 });
 
 app.get("/support", async (req, res) => {
