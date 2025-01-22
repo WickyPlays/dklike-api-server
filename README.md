@@ -2,7 +2,7 @@ Hi, Wicky's here!
 
 Welcome to DKLike API Server template!
 
-Ver. 1.0.3
+Ver. 1.0.4
 
 ## About DankaguLike
 
@@ -19,3 +19,7 @@ Original instruction: [https://dankag-like.web.app/custom-server](https://dankag
 ## How to make your own server from this code
 
 Follow the instruction from this document that I made here: [https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m](https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m)
+
+## Changelog
+- 1.0.4: Added pagination
+- 1.0.3: Mobile UI support (responsive update)
