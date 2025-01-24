@@ -72,30 +72,57 @@ function transformContent(content) {
 
 app.get("/", async (req, res) => {
   const db = await dbPromise;
-  
-  // Get the current page from the query string, default to 1
-  const page = parseInt(req.query.page) || 1;
+
+  // Get the search parameters and pagination values
+  const searchBy = req.query.searchBy || "title";
+  const search = req.query.search || ""; // Default to empty string
+  const page = parseInt(req.query.page) || 1; // Default to page 1
   const itemsPerPage = 15;
   const offset = (page - 1) * itemsPerPage;
 
-  // Fetch the total number of contents
-  const totalContents = await db.get(`SELECT COUNT(*) AS count FROM contents`);
-  const totalPages = Math.ceil(totalContents.count / itemsPerPage);
+  try {
+    let whereClause = "";
+    let params = [itemsPerPage, offset];
 
-  // Fetch the current page of contents
-  const contents = await db.all(`SELECT * FROM contents LIMIT ? OFFSET ?`, [itemsPerPage, offset]);
-  const list = contents.map(transformContent);
-  const contentsWithFormattedDate = list.map(content => ({
-    ...content,
-    date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
-  }));
+    // Add a WHERE clause if there is a search term
+    if (search.trim()) {
+      whereClause = `WHERE ${searchBy} LIKE ?`;
+      params = [`%${search}%`, ...params];
+    }
 
-  res.render("main", {
-    contents: contentsWithFormattedDate,
-    currentPage: page,
-    totalPages: totalPages,
-    totalCount: totalContents.count
-  });
+    // Fetch the total number of matching contents
+    const totalContentsQuery = `
+      SELECT COUNT(*) AS count FROM contents ${whereClause}
+    `;
+    const totalContents = await db.get(totalContentsQuery, params.slice(0, -2)); // Use only the first parameter for the count query
+    const totalPages = Math.ceil(totalContents.count / itemsPerPage);
+
+    // Fetch the current page of contents
+    const contentsQuery = `
+      SELECT * FROM contents ${whereClause} LIMIT ? OFFSET ?
+    `;
+    const contents = await db.all(contentsQuery, params);
+
+    // Transform contents for the template
+    const list = contents.map(transformContent);
+    const contentsWithFormattedDate = list.map((content) => ({
+      ...content,
+      date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
+    }));
+
+    // Render the page
+    res.render("main", {
+      contents: contentsWithFormattedDate,
+      currentPage: page,
+      totalPages: totalPages,
+      totalCount: totalContents.count,
+      searchBy: searchBy,
+      search: search,
+    });
+  } catch (error) {
+    console.error("Database query error:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.get("/support", async (req, res) => {

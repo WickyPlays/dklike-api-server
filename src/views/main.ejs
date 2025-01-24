@@ -16,30 +16,35 @@
       <div class="title-container">
         <h1 class="title">DankaguLike charts</h1>
         <div class="search-container">
-          <div class="select search-options">
-            <select id="searchBy" class="select">
-              <option value="name">By Name</option>
-              <option value="publisher">By Publisher</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            id="search"
-            class="input"
-            placeholder="Search for an item..."
-          />
+          <form method="GET" action="/" class="search-form">
+            <div class="select search-options">
+              <select id="searchBy" name="searchBy" class="select">
+                <option value="title" <%= searchBy === "title" ? "selected" : "" %>>By Title</option>
+                <option value="publisher" <%= searchBy === "publisher" ? "selected" : "" %>>By Publisher</option>
+              </select>
+            </div>
+            <div style="position: relative; width: 100%;">
+              <input
+                type="text"
+                id="search"
+                name="search"
+                class="input"
+                placeholder="Search for an item..."
+                value="<%= search %>"
+              />
+              <button type="submit" class="button is-info">Search</button>
+            </div>
+          </form>
         </div>
+        
         <div class="title-tools">
-          <a href="/distribution" target="_blank" class="button is-info"
-            >View distribution</a
-          >
+          <a href="/distribution" target="_blank" class="button is-info">View distribution</a>
           <a
             target="_blank"
             href="https://docs.google.com/spreadsheets/d/1PeaP2J8wSOittu1ocdCC-AQNb6ph6QHnBl7g1Xfz_Ig/edit?gid=1184683173#gid=1184683173"
             class="button is-primary"
             id="btn-submit"
-            >Request new chart</a
-          >
+            >Request new chart</a>
         </div>
       </div>
 
@@ -52,18 +57,10 @@
               <th class="sortable">ID <span class="sort-arrow"></span></th>
               <th class="sortable">Type <span class="sort-arrow"></span></th>
               <th class="sortable">Title <span class="sort-arrow"></span></th>
-              <th class="sortable">
-                Publisher <span class="sort-arrow"></span>
-              </th>
-              <th class="sortable numeric">
-                Date <span class="sort-arrow"></span>
-              </th>
-              <th class="sortable numeric">
-                Downloads <span class="sort-arrow"></span>
-              </th>
-              <th class="sortable numeric">
-                Score <span class="sort-arrow"></span>
-              </th>
+              <th class="sortable">Publisher <span class="sort-arrow"></span></th>
+              <th class="sortable numeric">Date <span class="sort-arrow"></span></th>
+              <th class="sortable numeric">Downloads <span class="sort-arrow"></span></th>
+              <th class="sortable numeric">Score <span class="sort-arrow"></span></th>
               <th>Difficulty</th>
               <th class="sortable">Lua <span class="sort-arrow"></span></th>
               <th>Link</th>
@@ -74,9 +71,10 @@
             <tr>
               <td><%= content.id %></td>
               <td>
-                <%= content.contentType === 0 ? "Songs" : content.contentType
-                === 1 ? "NoteSkins" : content.contentType === 2 ? "SoundEffects"
-                : content.contentType === 3 ? "GlobalLua" : "Unknown" %>
+                <%= content.contentType === 0 ? "Songs" :
+                     content.contentType === 1 ? "NoteSkins" :
+                     content.contentType === 2 ? "SoundEffects" :
+                     content.contentType === 3 ? "GlobalLua" : "Unknown" %>
               </td>
               <td><%= content.title %></td>
               <td><%= content.publisher %></td>
@@ -86,24 +84,19 @@
               <% if (content.contentType === 0) { %>
               <td class="difficulty">
                 <span class="diff" id="diff-easy">
-                  <% if (content.songInfo.difficulties[0] === -1) { %>X<% } else
-                  { %><%= content.songInfo.difficulties[0] %><% } %>
+                  <% if (content.songInfo.difficulties[0] === -1) { %>X<% } else { %><%= content.songInfo.difficulties[0] %><% } %>
                 </span>
                 <span class="diff" id="diff-normal">
-                  <% if (content.songInfo.difficulties[1] === -1) { %>X<% } else
-                  { %><%= content.songInfo.difficulties[1] %><% } %>
+                  <% if (content.songInfo.difficulties[1] === -1) { %>X<% } else { %><%= content.songInfo.difficulties[1] %><% } %>
                 </span>
                 <span class="diff" id="diff-hard">
-                  <% if (content.songInfo.difficulties[2] === -1) { %>X<% } else
-                  { %><%= content.songInfo.difficulties[2] %><% } %>
+                  <% if (content.songInfo.difficulties[2] === -1) { %>X<% } else { %><%= content.songInfo.difficulties[2] %><% } %>
                 </span>
                 <span class="diff" id="diff-extra">
-                  <% if (content.songInfo.difficulties[3] === -1) { %>X<% } else
-                  { %><%= content.songInfo.difficulties[3] %><% } %>
+                  <% if (content.songInfo.difficulties[3] === -1) { %>X<% } else { %><%= content.songInfo.difficulties[3] %><% } %>
                 </span>
                 <span class="diff" id="diff-lunatic">
-                  <% if (content.songInfo.difficulties[4] === -1) { %>X<% } else
-                  { %><%= content.songInfo.difficulties[4] %><% } %>
+                  <% if (content.songInfo.difficulties[4] === -1) { %>X<% } else { %><%= content.songInfo.difficulties[4] %><% } %>
                 </span>
               </td>
               <% } else { %>
@@ -124,32 +117,23 @@
         </table>
       </div>
 
-      <div
-        class="pagination is-centered"
-        role="navigation"
-        aria-label="pagination"
-      >
+      <div class="pagination is-centered" role="navigation" aria-label="pagination">
         <% if (currentPage > 1) { %>
-        <a class="pagination-previous" href="?page=<%= currentPage - 1 %>"
-          >Previous</a
-        >
+        <a class="pagination-previous" href="?page=<%= currentPage - 1 %>&search=<%= search %>&searchBy=<%= searchBy %>">Previous</a>
         <% } else { %>
         <a class="pagination-previous" disabled>Previous</a>
-        <% } %> <% if (currentPage < totalPages) { %>
-        <a class="pagination-next" href="?page=<%= currentPage + 1 %>">Next</a>
+        <% } %>
+        
+        <% if (currentPage < totalPages) { %>
+        <a class="pagination-next" href="?page=<%= currentPage + 1 %>&search=<%= search %>&searchBy=<%= searchBy %>">Next</a>
         <% } else { %>
         <a class="pagination-next" disabled>Next</a>
         <% } %>
 
         <ul class="pagination-list">
           <li>
-            <a
-              class="pagination-link <%= currentPage === 1 ? 'is-current' : '' %>"
-              href="?page=1"
-              >1</a
-            >
+            <a class="pagination-link <%= currentPage === 1 ? 'is-current' : '' %>" href="?page=1&search=<%= search %>&searchBy=<%= searchBy %>">1</a>
           </li>
-
           <% if (totalPages > 2) { %>
           <li><span class="pagination-ellipsis">&hellip;</span></li>
           <li>
@@ -159,17 +143,14 @@
               value="<%= currentPage %>"
               min="1"
               max="<%= totalPages %>"
-              onkeydown="if(event.key === 'Enter') window.location.href='?page=' + this.value"
+              onkeydown="if(event.key === 'Enter') window.location.href='?page=' + this.value + '&search=<%= search %>&searchBy=<%= searchBy %>'"
             />
           </li>
           <li><span class="pagination-ellipsis">&hellip;</span></li>
-          <% } %> <% if (totalPages >= 2) { %>
+          <% } %>
+          <% if (totalPages >= 2) { %>
           <li>
-            <a
-              class="pagination-link <%= currentPage === totalPages ? 'is-current' : '' %>"
-              href="?page=<%= totalPages %>"
-              ><%= totalPages %></a
-            >
+            <a class="pagination-link <%= currentPage === totalPages ? 'is-current' : '' %>" href="?page=<%= totalPages %>&search=<%= search %>&searchBy=<%= searchBy %>"><%= totalPages %></a>
           </li>
           <% } %>
         </ul>

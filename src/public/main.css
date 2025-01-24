@@ -41,12 +41,28 @@ h1 {
 .search-container {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0;
+  position: relative;
 }
 
 #search {
   background-color: #434343;
   color: #fff;
+  padding-right: 50px;
+}
+
+.search-form {
+  width: 100%;
+  display: flex;
+}
+
+.search-container .button {
+  position: absolute;
+  right: 0;
+  height: 100%;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 0 15px;
 }
 
 #resultCount {
@@ -176,6 +192,12 @@ th.sortable.sorted-desc .sort-arrow {
     flex-direction: column;
     align-items: center;
     width: 100%;
+  }
+
+  .search-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .title-tools {
