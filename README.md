@@ -2,7 +2,10 @@ Hi, Wicky's here!
 
 Welcome to DKLike API Server template!
 
-Ver. 1.0.4
+**Version**: 1.0.4
+
+> [!WARNING]  
+> No more new features will be added after this point except for bugs. You are responsible for your own modified code from this template.
 
 ## About DankaguLike
 
