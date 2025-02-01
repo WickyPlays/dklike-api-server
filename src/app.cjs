@@ -1,7 +1,7 @@
 const express = require("express");
-const { open } = require("sqlite");
-const sqlite3 = require("sqlite3");
 const path = require("path");
+const fs = require("fs");
+const xlsx = require("xlsx");
 const { convertLinkToDownloadable } = require("./converter.cjs");
 
 const app = express();
@@ -10,119 +10,38 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-const dbPromise = open({
-  filename: './src/database/charts.db',
-  driver: sqlite3.Database
-});
-
-(async function initializeDatabase() {
-  const db = await dbPromise;
-
-  await db.exec(`CREATE TABLE IF NOT EXISTS contents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contentType INTEGER NOT NULL,
-    title TEXT,
-    publisher TEXT,
-    description TEXT,
-    downloadUrl TEXT,
-    imageUrl TEXT,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    downloadCount INTEGER DEFAULT 0,
-    voteAverageScore REAL DEFAULT 0,
-    songInfo TEXT
-  )`);
-
-  await db.exec(`CREATE TABLE IF NOT EXISTS votes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contentId INTEGER NOT NULL,
-    userId TEXT NOT NULL,
-    name TEXT,
-    score INTEGER,
-    comment TEXT,
-    like INTEGER DEFAULT 0,
-    date TEXT NOT NULL,
-    FOREIGN KEY(contentId) REFERENCES contents(id)
-  )`);
-
-  await db.exec(`CREATE TABLE IF NOT EXISTS likes (
-    userId TEXT NOT NULL,
-    voteId INTEGER NOT NULL,
-    PRIMARY KEY(userId, voteId),
-    FOREIGN KEY(voteId) REFERENCES votes(id)
-  )`);
-})();
-
+const XLSX_FILE = path.resolve(__dirname, "database/charts.xlsx");
 const successMessage = { message: "Operation was successful." };
 
-function transformContent(content) {
-  return {
-    id: Number(content.id),
-    contentType: Number(content.contentType),
-    title: content.title,
-    publisher: content.publisher,
-    description: content.description,
-    downloadUrl: convertLinkToDownloadable(content.downloadUrl),
-    imageUrl: content.imageUrl,
-    date: new Date(content.date),
-    downloadCount: Number(content.downloadCount),
-    voteAverageScore: Number(content.voteAverageScore),
-    songInfo: JSON.parse(content.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}')
-  };
+function initializeDatabase() {
+  if (!fs.existsSync(XLSX_FILE)) {
+    const workbook = xlsx.utils.book_new();
+    const sheets = {
+      contents: [["id", "contentType", "title", "publisher", "description", "downloadUrl", "imageUrl", "date", "downloadCount", "voteAverageScore", "songInfo"]],
+      votes: [["id", "contentId", "userId", "name", "score", "comment", "like", "date"]],
+      likes: [["userId", "voteId"]],
+    };
+    Object.entries(sheets).forEach(([name, data]) => xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet(data), name));
+    xlsx.writeFile(workbook, XLSX_FILE);
+  }
+}
+
+initializeDatabase();
+
+function readSheet(sheetName) {
+  const workbook = xlsx.readFile(XLSX_FILE);
+  return xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+}
+
+function writeSheet(sheetName, data) {
+  const workbook = xlsx.readFile(XLSX_FILE);
+  workbook.Sheets[sheetName] = xlsx.utils.json_to_sheet(data);
+  xlsx.writeFile(workbook, XLSX_FILE);
 }
 
 app.get("/", async (req, res) => {
-  const db = await dbPromise;
-
-  // Get the search parameters and pagination values
-  const searchBy = req.query.searchBy || "title";
-  const search = req.query.search || ""; // Default to empty string
-  const page = parseInt(req.query.page) || 1; // Default to page 1
-  const itemsPerPage = 15;
-  const offset = (page - 1) * itemsPerPage;
-
-  try {
-    let whereClause = "";
-    let params = [itemsPerPage, offset];
-
-    // Add a WHERE clause if there is a search term
-    if (search.trim()) {
-      whereClause = `WHERE ${searchBy} LIKE ?`;
-      params = [`%${search}%`, ...params];
-    }
-
-    // Fetch the total number of matching contents
-    const totalContentsQuery = `
-      SELECT COUNT(*) AS count FROM contents ${whereClause}
-    `;
-    const totalContents = await db.get(totalContentsQuery, params.slice(0, -2)); // Use only the first parameter for the count query
-    const totalPages = Math.ceil(totalContents.count / itemsPerPage);
-
-    // Fetch the current page of contents
-    const contentsQuery = `
-      SELECT * FROM contents ${whereClause} LIMIT ? OFFSET ?
-    `;
-    const contents = await db.all(contentsQuery, params);
-
-    // Transform contents for the template
-    const list = contents.map(transformContent);
-    const contentsWithFormattedDate = list.map((content) => ({
-      ...content,
-      date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
-    }));
-
-    // Render the page
-    res.render("main", {
-      contents: contentsWithFormattedDate,
-      currentPage: page,
-      totalPages: totalPages,
-      totalCount: totalContents.count,
-      searchBy: searchBy,
-      search: search,
-    });
-  } catch (error) {
-    console.error("Database query error:", error);
-    res.status(500).send("Internal Server Error");
-  }
+  const contents = readSheet("contents");
+  res.render("main", { contents, currentPage: 1, totalPages: 1, totalCount: contents.length, searchBy: "title", search: "" });
 });
 
 app.get("/support", async (req, res) => {
@@ -131,139 +50,58 @@ app.get("/support", async (req, res) => {
   });
 });
 
-app.get("/contents", async (req, res) => {
-  const db = await dbPromise;
-  const contents = await db.all(`SELECT * FROM contents`);
-  const list = contents.map(c => ({
-    id: c.id,
-    contentType: c.contentType,
-    title: c.title,
-    publisher: c.publisher,
-    date: c.date,
-    downloadCount: c.downloadCount,
-    voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{}'),
-    downloadUrl: convertLinkToDownloadable(c.downloadUrl)
-  }));
-  res.status(200).json({ contents: list });
+app.get("/contents", (req, res) => {
+  const contents = readSheet("contents").map(c => ({ ...c, downloadUrl: convertLinkToDownloadable(c.downloadUrl) }));
+  res.status(200).json({ contents });
 });
 
-app.get("/contents/:id", async (req, res) => {
-  const id = req.params.id;
-  const db = await dbPromise;
-  const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
-  if (content) {
-    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
-  }
+app.get("/contents/:id", (req, res) => {
+  console.log("ASD")
+  const content = readSheet("contents").find(c => c.id == req.params.id);
+  if (content) content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
+  console.log(content)
   res.status(200).json({ contents: content });
 });
 
-app.get("/contents/:id/description", async (req, res) => {
-  const id = req.params.id;
-  const db = await dbPromise;
-  const content = await db.get(`SELECT description, downloadUrl, imageUrl FROM contents WHERE id = ?`, [id]);
+app.put("/contents/:id/downloaded", (req, res) => {
+  const contents = readSheet("contents");
+  const index = contents.findIndex(c => c.id == req.params.id);
+  if (index !== -1) contents[index].downloadCount++;
+  writeSheet("contents", contents);
+  res.status(200).send(successMessage);
+});
+
+app.get("/contents/:id/description", (req, res) => {
+  const content = readSheet("contents").find(c => c.id == req.params.id);
   if (content) {
-    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
-  }
-  res.status(200).json(content);
-});
-
-app.put("/contents/:id/downloaded", async (req, res) => {
-  const id = req.params.id;
-  const db = await dbPromise;
-  try {
-    await db.run(`UPDATE contents SET downloadCount = downloadCount + 1 WHERE id = ?`, [id]);
-    res.status(200).send(successMessage);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json({ description: content.description, imageUrl: content.imageUrl, downloadUrl: convertLinkToDownloadable(content.downloadUrl) });
+  } else {
+    res.status(404).send({ error: "Content not found" });
   }
 });
 
-app.get("/votes", async (req, res) => {
-  const db = await dbPromise;
-  const votes = await db.all(`SELECT * FROM votes`);
-  res.status(200).json({ votes });
+app.get("/votes", (req, res) => {
+  res.status(200).json({ votes: readSheet("votes") });
 });
 
-app.get("/contents/:id/vote", async (req, res) => {
-  const id = req.params.id;
-  const db = await dbPromise;
-  const votes = await db.all(`SELECT * FROM votes WHERE contentId = ?`, [id]);
-  res.status(200).json({ votes });
+app.get("/contents/:id/vote", (req, res) => {
+  res.status(200).json({ votes: readSheet("votes").filter(v => v.contentId == req.params.id) });
 });
 
-app.post("/contents/:id/vote", async (req, res) => {
-  const contentId = req.params.id;
-  const db = await dbPromise;
-  try {
-    await db.run(`INSERT INTO votes (contentId, userId, name, score, comment, like, date) VALUES (?, ?, ?, ?, ?, ?, ?)`, [
-      contentId,
-      req.body.userId,
-      req.body.name,
-      req.body.score,
-      req.body.comment,
-      req.body.like || 0,
-      req.body.date
-    ]);
-    res.status(200).send(successMessage);
-    updateVoteAverageScore(contentId);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+app.post("/contents/:id/vote", (req, res) => {
+  const votes = readSheet("votes");
+  const newVote = { id: votes.length + 1, ...req.body, contentId: req.params.id };
+  votes.push(newVote);
+  writeSheet("votes", votes);
+  res.status(200).send(successMessage);
 });
 
-app.put("/contents/:id/vote", async (req, res) => {
-  const contentId = req.params.id;
-  const voteId = req.body.id;
-  const db = await dbPromise;
-  try {
-    await db.run(`UPDATE votes SET name = ?, score = ?, comment = ?, like = 0, date = ? WHERE id = ? AND userId = ?`, [
-      req.body.name,
-      req.body.score,
-      req.body.comment,
-      req.body.date,
-      voteId,
-      req.body.userId
-    ]);
-    await db.run(`DELETE FROM likes WHERE voteId = ?`, [voteId]);
-    res.status(200).send(successMessage);
-    updateVoteAverageScore(contentId);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-const updateVoteAverageScore = async (contentId) => {
-  const db = await dbPromise;
-  const votes = await db.all(`SELECT score FROM votes WHERE contentId = ?`, [contentId]);
-  if (votes.length === 0) return;
-  const total = votes.reduce((sum, v) => sum + v.score, 0);
-  const averageScore = total / votes.length;
-  await db.run(`UPDATE contents SET voteAverageScore = ? WHERE id = ?`, [averageScore, contentId]);
-};
-
-app.get("/likes/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  const db = await dbPromise;
-  const likes = await db.all(`SELECT * FROM likes WHERE userId = ?`, [userId]);
-  res.status(200).json({ likes });
-});
-
-app.put("/likes/:userId", async (req, res) => {
-  const voteId = req.body.voteId;
-  const userId = req.params.userId;
-  const db = await dbPromise;
-  try {
-    await db.run(`INSERT INTO likes (userId, voteId) VALUES (?, ?)`, [userId, voteId]);
-    await db.run(`UPDATE votes SET like = like + 1 WHERE id = ?`, [voteId]);
-    res.status(200).send(successMessage);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+app.put("/likes/:userId", (req, res) => {
+  const likes = readSheet("likes");
+  likes.push({ userId: req.params.userId, voteId: req.body.voteId });
+  writeSheet("likes", likes);
+  res.status(200).send(successMessage);
 });
 
 const EXPRESS_PORT = process.env.PORT || 3000;
-
-app.listen(EXPRESS_PORT, () => {
-  console.log("server running");
-});
+app.listen(EXPRESS_PORT, () => console.log("server running"));
