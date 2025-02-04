@@ -15,7 +15,7 @@ DankaguLike is a fan-made Touhou rhythm game that is a revival of the original e
 
 This is a custom server template for DankaguLike where you can host charts made by users remotely online.
 
-Using SQLite (sqlite3) as database provider & Express.js as web framework.
+Using PostgreSQL as database provider & Express.js as web framework.
 
 Original instruction: [https://dankag-like.web.app/custom-server](https://dankag-like.web.app/custom-server)
 
