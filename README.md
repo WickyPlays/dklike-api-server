@@ -2,7 +2,7 @@ Hi, Wicky's here!
 
 Welcome to DKLike API Server template!
 
-**Version**: 1.0.4
+**Version**: 1.0.5
 
 > [!WARNING]  
 > No more new features will be added after this point except for bugs. You are responsible for your own modified code from this template.
@@ -24,5 +24,6 @@ Original instruction: [https://dankag-like.web.app/custom-server](https://dankag
 Follow the instruction from this document that I made here: [https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m](https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m)
 
 ## Changelog
+- 1.0.5: Added Vercel support
 - 1.0.4: Added pagination
 - 1.0.3: Mobile UI support (responsive update)
