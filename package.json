@@ -4,8 +4,8 @@
   "main": "src/app.cjs",
   "type": "module",
   "scripts": {
-    "start": "nodemon ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "start": "node ./src/app.cjs",
+    "dev": "nodemon ./src/app.cjs"
   },
   "keywords": [],
   "author": "",
