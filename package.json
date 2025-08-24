@@ -1,6 +1,6 @@
 {
   "name": "dklike-api-server",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "main": "src/app.cjs",
   "type": "module",
   "scripts": {
@@ -17,7 +17,10 @@
     "nodemon": "^3.1.7"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
+    "jsonwebtoken": "^9.0.2",
     "jsx": "^0.9.89",
     "netlify-cli": "^22.2.2",
     "sqlite": "^5.1.1",

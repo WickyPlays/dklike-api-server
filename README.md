@@ -2,10 +2,10 @@ Hi, Wicky's here!
 
 Welcome to DKLike API Server template!
 
-**Version**: 1.0.5
+**Version**: 1.1.0a1
 
-> [!WARNING]  
-> No more new features will be added after this point except for bugs. You are responsible for your own modified code from this template.
+<!-- > [!WARNING]  
+> No more new features will be added after this point except for bugs. You are responsible for your own modified code from this template. -->
 
 ## About DankaguLike
 
@@ -21,9 +21,10 @@ Original instruction: [https://dankag-like.web.app/custom-server](https://dankag
 
 ## How to make your own server from this code
 
-Follow the instruction from this document that I made here: [https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m](https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m)
+Follow the instruction from this document that I made here: [https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m](https://docs.google.com/document/d/1K4AzgyUL6M3_fGBfq7wp-eMjqApQONYDXInfTLPz8dI/edit?tab=t.0#heading=h.ymhzddga2h9m) (currently outdated, will be updated later)
 
 ## Changelog
+- 1.1.0a1: Add accounts & ranking.
 - 1.0.5: Added Vercel support
 - 1.0.4: Added pagination
 - 1.0.3: Mobile UI support (responsive update)
