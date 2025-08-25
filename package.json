@@ -1,11 +1,10 @@
 {
   "name": "dklike-api-server",
-  "version": "1.1.0",
-  "main": "src/app.cjs",
-  "type": "module",
+  "version": "1.1.0a1",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node ./src/app.cjs",
-    "dev": "nodemon ./src/app.cjs",
+    "start": "node ./src/app.js",
+    "dev": "nodemon ./src/app.js",
     "build": "echo Building..."
   },
   "keywords": [],

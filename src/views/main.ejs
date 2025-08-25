@@ -54,15 +54,31 @@
         <table class="table is-striped">
           <thead>
             <tr>
-              <th class="sortable">ID <span class="sort-arrow"></span></th>
-              <th class="sortable">Type <span class="sort-arrow"></span></th>
-              <th class="sortable">Title <span class="sort-arrow"></span></th>
-              <th class="sortable">Publisher <span class="sort-arrow"></span></th>
-              <th class="sortable numeric">Date <span class="sort-arrow"></span></th>
-              <th class="sortable numeric">Downloads <span class="sort-arrow"></span></th>
-              <th class="sortable numeric">Score <span class="sort-arrow"></span></th>
+              <th class="sortable <%= sortBy === 'id' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=id&amp;sortOrder=<%= sortBy === 'id' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">ID <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable <%= sortBy === 'type' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=type&amp;sortOrder=<%= sortBy === 'type' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Type <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable <%= sortBy === 'title' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=title&amp;sortOrder=<%= sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Title <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable <%= sortBy === 'publisher' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=publisher&amp;sortOrder=<%= sortBy === 'publisher' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Publisher <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable numeric <%= sortBy === 'date' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=date&amp;sortOrder=<%= sortBy === 'date' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Date <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable numeric <%= sortBy === 'downloads' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=downloads&amp;sortOrder=<%= sortBy === 'downloads' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Downloads <span class="sort-arrow"></span></a>
+              </th>
+              <th class="sortable numeric <%= sortBy === 'score' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=score&amp;sortOrder=<%= sortBy === 'score' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Score <span class="sort-arrow"></span></a>
+              </th>
               <th>Difficulty</th>
-              <th class="sortable">Lua <span class="sort-arrow"></span></th>
+              <th class="sortable <%= sortBy === 'lua' ? 'sorted-' + sortOrder : '' %>">
+                <a href="?page=<%= currentPage %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=lua&amp;sortOrder=<%= sortBy === 'lua' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'desc' %>">Lua <span class="sort-arrow"></span></a>
+              </th>
               <th>Link</th>
             </tr>
           </thead>
@@ -119,20 +135,20 @@
 
       <div class="pagination is-centered" role="navigation" aria-label="pagination">
         <% if (currentPage > 1) { %>
-        <a class="pagination-previous" href="?page=<%= currentPage - 1 %>&search=<%= search %>&searchBy=<%= searchBy %>">Previous</a>
+        <a class="pagination-previous" href="?page=<%= currentPage - 1 %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=<%= sortBy %>&amp;sortOrder=<%= sortOrder %>">Previous</a>
         <% } else { %>
         <a class="pagination-previous" disabled>Previous</a>
         <% } %>
         
         <% if (currentPage < totalPages) { %>
-        <a class="pagination-next" href="?page=<%= currentPage + 1 %>&search=<%= search %>&searchBy=<%= searchBy %>">Next</a>
+        <a class="pagination-next" href="?page=<%= currentPage + 1 %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=<%= sortBy %>&amp;sortOrder=<%= sortOrder %>">Next</a>
         <% } else { %>
         <a class="pagination-next" disabled>Next</a>
         <% } %>
 
         <ul class="pagination-list">
           <li>
-            <a class="pagination-link <%= currentPage === 1 ? 'is-current' : '' %>" href="?page=1&search=<%= search %>&searchBy=<%= searchBy %>">1</a>
+            <a class="pagination-link <%= currentPage === 1 ? 'is-current' : '' %>" href="?page=1&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=<%= sortBy %>&amp;sortOrder=<%= sortOrder %>">1</a>
           </li>
           <% if (totalPages > 2) { %>
           <li><span class="pagination-ellipsis">&hellip;</span></li>
@@ -143,14 +159,14 @@
               value="<%= currentPage %>"
               min="1"
               max="<%= totalPages %>"
-              onkeydown="if(event.key === 'Enter') window.location.href='?page=' + this.value + '&search=<%= search %>&searchBy=<%= searchBy %>'"
+              onkeydown="if(event.key === 'Enter') window.location.href='?page=' + this.value + '&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=<%= sortBy %>&amp;sortOrder=<%= sortOrder %>'"
             />
           </li>
           <li><span class="pagination-ellipsis">&hellip;</span></li>
           <% } %>
           <% if (totalPages >= 2) { %>
           <li>
-            <a class="pagination-link <%= currentPage === totalPages ? 'is-current' : '' %>" href="?page=<%= totalPages %>&search=<%= search %>&searchBy=<%= searchBy %>"><%= totalPages %></a>
+            <a class="pagination-link <%= currentPage === totalPages ? 'is-current' : '' %>" href="?page=<%= totalPages %>&amp;search=<%= search %>&amp;searchBy=<%= searchBy %>&amp;sortBy=<%= sortBy %>&amp;sortOrder=<%= sortOrder %>"><%= totalPages %></a>
           </li>
           <% } %>
         </ul>
