@@ -1,29 +1,27 @@
 const express = require("express");
 const router = express.Router();
-const { dbPromise } = require("../database");
+const { query } = require("../database");
 const { convertLinkToDownloadable } = require("../converter.js");
 
 function transformContent(content) {
   return {
     id: Number(content.id),
-    contentType: Number(content.contentType),
+    contentType: Number(content.content_type),
     title: content.title,
     publisher: content.publisher,
     description: content.description,
-    downloadUrl: convertLinkToDownloadable(content.downloadUrl),
-    imageUrl: content.imageUrl,
+    downloadUrl: convertLinkToDownloadable(content.download_url),
+    imageUrl: content.image_url,
     date: new Date(content.date),
-    downloadCount: Number(content.downloadCount),
-    voteAverageScore: Number(content.voteAverageScore),
+    downloadCount: Number(content.download_count),
+    voteAverageScore: Number(content.vote_average_score),
     songInfo: JSON.parse(
-      content.songInfo || '{"difficulties":[0,0,0,0,0],"hasLua":false}'
+      content.song_info || '{"difficulties":[0,0,0,0,0],"hasLua":false}'
     ),
   };
 }
 
 router.get("/", async (req, res) => {
-  const db = await dbPromise;
-
   const searchBy = req.query.searchBy || "title";
   const search = req.query.search || "";
   const page = parseInt(req.query.page) || 1;
@@ -38,7 +36,7 @@ router.get("/", async (req, res) => {
     let baseParams = [];
 
     if (search.trim()) {
-      whereClause = `WHERE ${searchBy} LIKE ?`;
+      whereClause = `WHERE ${searchBy} ILIKE $1`;
       baseParams = [`%${search}%`];
       params = [...baseParams, ...params];
     }
@@ -50,7 +48,7 @@ router.get("/", async (req, res) => {
         column = "id";
         break;
       case "type":
-        column = "contentType";
+        column = "content_type";
         break;
       case "title":
         column = "title";
@@ -62,13 +60,13 @@ router.get("/", async (req, res) => {
         column = "date";
         break;
       case "downloads":
-        column = "downloadCount";
+        column = "download_count";
         break;
       case "score":
-        column = "voteAverageScore";
+        column = "vote_average_score";
         break;
       case "lua":
-        column = `json_extract(songInfo, '$.hasLua')`;
+        column = `song_info ->> 'hasLua'`;
         break;
       default:
         column = "id";
@@ -79,15 +77,15 @@ router.get("/", async (req, res) => {
     const totalContentsQuery = `
       SELECT COUNT(*) AS count FROM contents ${whereClause}
     `;
-    const totalContents = await db.get(totalContentsQuery, baseParams);
-    const totalPages = Math.ceil(totalContents.count / itemsPerPage);
+    const totalContents = await query(totalContentsQuery, baseParams);
+    const totalPages = Math.ceil(totalContents.rows[0].count / itemsPerPage);
 
     const contentsQuery = `
-      SELECT * FROM contents ${whereClause} ${orderBy} LIMIT ? OFFSET ?
+      SELECT * FROM contents ${whereClause} ${orderBy} LIMIT $1 OFFSET $2
     `;
-    const contents = await db.all(contentsQuery, params);
+    const contents = await query(contentsQuery, params);
 
-    const list = contents.map(transformContent);
+    const list = contents.rows.map(transformContent);
     const contentsWithFormattedDate = list.map((content) => ({
       ...content,
       date: content.date.toISOString().slice(0, 10).replace(/-/g, "/"),
@@ -97,7 +95,7 @@ router.get("/", async (req, res) => {
       contents: contentsWithFormattedDate,
       currentPage: page,
       totalPages: totalPages,
-      totalCount: totalContents.count,
+      totalCount: totalContents.rows[0].count,
       searchBy: searchBy,
       search: search,
       sortBy: sortBy,

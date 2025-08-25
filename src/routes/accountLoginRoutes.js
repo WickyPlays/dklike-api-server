@@ -1,18 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { dbPromise } = require("../database");
+const { query } = require("../database");
 const jwt = require("jsonwebtoken");
 
 router.post("/", async (req, res) => {
   try {
     const { accountId, password } = req.body;
-    const db = await dbPromise;
 
-    const account = await db.get(
-      `SELECT * FROM accounts WHERE accountId = ?`,
+    const result = await query(
+      `SELECT * FROM accounts WHERE account_id = $1`,
       [accountId]
     );
-    
+    const account = result.rows[0];
+
     if (!account) {
       res.status(401).json({ success: false, message: 'Account not found.' });
       return;
@@ -23,12 +23,12 @@ router.post("/", async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ aid: account.accountId }, req.app.get('jwtToken'), {
+    const token = jwt.sign({ aid: account.account_id }, req.app.get('jwtToken'), {
       expiresIn: '24h'
     });
 
-    await db.run(
-      `UPDATE accounts SET token = ? WHERE accountId = ?`,
+    await query(
+      `UPDATE accounts SET token = $1 WHERE account_id = $2`,
       [token, accountId]
     );
 
@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
       success: true,
       message: 'Authentication successful.',
       account: {
-        accountId: account.accountId,
+        accountId: account.account_id,
         token: token,
         password: account.password,
         name: account.name,

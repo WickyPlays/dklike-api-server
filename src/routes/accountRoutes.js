@@ -1,19 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const { dbPromise } = require("../database");
-const jwt = require("jsonwebtoken");
+const { query } = require("../database");
 
 router.post("/", async (req, res) => {
   try {
     const { accountId, password, name, icon } = req.body;
-    const db = await dbPromise;
 
-    const existingAccount = await db.get(
-      `SELECT * FROM accounts WHERE accountId = ?`,
+    const existingAccount = await query(
+      `SELECT * FROM accounts WHERE account_id = $1`,
       [accountId]
     );
-    
-    if (existingAccount) {
+
+    if (existingAccount.rows.length > 0) {
       res.status(400).json({
         success: false,
         message: 'Account ID already exists.'
@@ -21,8 +19,8 @@ router.post("/", async (req, res) => {
       return;
     }
 
-    await db.run(
-      `INSERT INTO accounts (accountId, password, name, icon) VALUES (?, ?, ?, ?)`,
+    await query(
+      `INSERT INTO accounts (account_id, password, name, icon) VALUES ($1, $2, $3, $4)`,
       [accountId, password, name, icon || 0]
     );
 
@@ -42,7 +40,6 @@ router.post("/", async (req, res) => {
 router.put("/", async (req, res) => {
   try {
     const { accountId, token, name, icon, password } = req.body;
-    const db = await dbPromise;
 
     if (!accountId || !token) {
       res.status(400).json({
@@ -52,12 +49,12 @@ router.put("/", async (req, res) => {
       return;
     }
 
-    const account = await db.get(
-      `SELECT * FROM accounts WHERE accountId = ? AND token = ?`,
+    const account = await query(
+      `SELECT * FROM accounts WHERE account_id = $1 AND token = $2`,
       [accountId, token]
     );
-    
-    if (!account) {
+
+    if (account.rows.length === 0) {
       res.status(404).json({
         success: false,
         message: 'Account not found or invalid token.'
@@ -67,22 +64,22 @@ router.put("/", async (req, res) => {
 
     const updateFields = [];
     const updateValues = [];
-    
+
     if (name !== undefined) {
-      updateFields.push('name = ?');
+      updateFields.push('name = $' + (updateValues.length + 1));
       updateValues.push(name);
     }
-    
+
     if (icon !== undefined) {
-      updateFields.push('icon = ?');
+      updateFields.push('icon = $' + (updateValues.length + 1));
       updateValues.push(icon);
     }
-    
+
     if (password !== undefined) {
-      updateFields.push('password = ?');
+      updateFields.push('password = $' + (updateValues.length + 1));
       updateValues.push(password);
     }
-    
+
     if (updateFields.length === 0) {
       res.status(400).json({
         success: false,
@@ -90,11 +87,11 @@ router.put("/", async (req, res) => {
       });
       return;
     }
-    
+
     updateValues.push(accountId, token);
-    
-    await db.run(
-      `UPDATE accounts SET ${updateFields.join(', ')} WHERE accountId = ? AND token = ?`,
+
+    await query(
+      `UPDATE accounts SET ${updateFields.join(', ')} WHERE account_id = $${updateValues.length - 1} AND token = $${updateValues.length}`,
       updateValues
     );
 

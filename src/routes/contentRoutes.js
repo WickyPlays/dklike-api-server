@@ -1,50 +1,64 @@
 const express = require("express");
 const router = express.Router();
-const { dbPromise } = require("../database");
+const { query } = require("../database");
 const { convertLinkToDownloadable } = require("../converter.js");
 
 router.get("/", async (req, res) => {
-  const db = await dbPromise;
-  const contents = await db.all(`SELECT * FROM contents`);
-  const list = contents.map(c => ({
+  const result = await query(`SELECT * FROM contents`);
+  const list = result.rows.map(c => ({
     id: c.id,
-    contentType: c.contentType,
+    contentType: c.content_type,
     title: c.title,
     publisher: c.publisher,
     date: c.date,
-    downloadCount: c.downloadCount,
-    voteAverageScore: c.voteAverageScore,
-    songInfo: JSON.parse(c.songInfo || '{}'),
-    downloadUrl: convertLinkToDownloadable(c.downloadUrl)
+    downloadCount: c.download_count,
+    voteAverageScore: c.vote_average_score,
+    songInfo: JSON.parse(c.song_info || '{}'),
+    downloadUrl: convertLinkToDownloadable(c.download_url)
   }));
   res.status(200).json({ contents: list });
 });
 
 router.get("/:id", async (req, res) => {
   const id = req.params.id;
-  const db = await dbPromise;
-  const content = await db.get(`SELECT * FROM contents WHERE id = ?`, [id]);
+  const result = await query(`SELECT * FROM contents WHERE id = $1`, [id]);
+  let content = result.rows[0];
   if (content) {
-    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
+    content = {
+      id: content.id,
+      contentType: content.content_type,
+      title: content.title,
+      publisher: content.publisher,
+      description: content.description,
+      downloadUrl: convertLinkToDownloadable(content.download_url),
+      imageUrl: content.image_url,
+      date: content.date,
+      downloadCount: content.download_count,
+      voteAverageScore: content.vote_average_score,
+      songInfo: JSON.parse(content.song_info || '{}')
+    };
   }
   res.status(200).json({ contents: content });
 });
 
 router.get("/:id/description", async (req, res) => {
   const id = req.params.id;
-  const db = await dbPromise;
-  const content = await db.get(`SELECT description, downloadUrl, imageUrl FROM contents WHERE id = ?`, [id]);
+  const result = await query(`SELECT description, download_url, image_url FROM contents WHERE id = $1`, [id]);
+  let content = result.rows[0];
   if (content) {
-    content.downloadUrl = convertLinkToDownloadable(content.downloadUrl);
+    content = {
+      description: content.description,
+      downloadUrl: convertLinkToDownloadable(content.download_url),
+      imageUrl: content.image_url
+    };
   }
   res.status(200).json(content);
 });
 
 router.put("/:id/downloaded", async (req, res) => {
   const id = req.params.id;
-  const db = await dbPromise;
   try {
-    await db.run(`UPDATE contents SET downloadCount = downloadCount + 1 WHERE id = ?`, [id]);
+    await query(`UPDATE contents SET download_count = download_count + 1 WHERE id = $1`, [id]);
     res.status(200).json({ message: "Operation was successful." });
   } catch (error) {
     res.status(500).json({ message: error.message });

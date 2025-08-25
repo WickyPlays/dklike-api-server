@@ -1,69 +1,106 @@
-const { open } = require("sqlite");
-const sqlite3 = require("sqlite3");
+const { Pool } = require("pg");
 
-const dbPromise = open({
-  filename: 'src/database/charts.db',
-  driver: sqlite3.Database
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+});
+
+pool.on("connect", () => {
+  console.log("Connected to PostgreSQL database");
+});
+
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
+  process.exit(-1);
 });
 
 async function initializeDatabase() {
-  const db = await dbPromise;
+  try {
+    // Create contents table
+    await pool.query(`CREATE TABLE IF NOT EXISTS contents (
+      id SERIAL PRIMARY KEY,
+      content_type INTEGER NOT NULL,
+      title TEXT,
+      publisher TEXT,
+      description TEXT,
+      download_url TEXT,
+      image_url TEXT,
+      date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      download_count INTEGER DEFAULT 0,
+      vote_average_score REAL DEFAULT 0,
+      song_info TEXT
+    )`);
 
-  await db.exec(`CREATE TABLE IF NOT EXISTS contents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contentType INTEGER NOT NULL,
-    title TEXT,
-    publisher TEXT,
-    description TEXT,
-    downloadUrl TEXT,
-    imageUrl TEXT,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    downloadCount INTEGER DEFAULT 0,
-    voteAverageScore REAL DEFAULT 0,
-    songInfo TEXT
-  )`);
+    // Create votes table
+    await pool.query(`CREATE TABLE IF NOT EXISTS votes (
+      id SERIAL PRIMARY KEY,
+      content_id INTEGER NOT NULL,
+      user_id TEXT NOT NULL,
+      name TEXT,
+      score INTEGER,
+      comment TEXT,
+      "like" INTEGER DEFAULT 0,
+      date TEXT NOT NULL,
+      FOREIGN KEY(content_id) REFERENCES contents(id) ON DELETE CASCADE
+    )`);
 
-  await db.exec(`CREATE TABLE IF NOT EXISTS votes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contentId INTEGER NOT NULL,
-    userId TEXT NOT NULL,
-    name TEXT,
-    score INTEGER,
-    comment TEXT,
-    like INTEGER DEFAULT 0,
-    date TEXT NOT NULL,
-    FOREIGN KEY(contentId) REFERENCES contents(id)
-  )`);
+    // Create likes table
+    await pool.query(`CREATE TABLE IF NOT EXISTS likes (
+      user_id TEXT NOT NULL,
+      vote_id INTEGER NOT NULL,
+      PRIMARY KEY(user_id, vote_id),
+      FOREIGN KEY(vote_id) REFERENCES votes(id) ON DELETE CASCADE
+    )`);
 
-  await db.exec(`CREATE TABLE IF NOT EXISTS likes (
-    userId TEXT NOT NULL,
-    voteId INTEGER NOT NULL,
-    PRIMARY KEY(userId, voteId),
-    FOREIGN KEY(voteId) REFERENCES votes(id)
-  )`);
+    // Create accounts table
+    await pool.query(`CREATE TABLE IF NOT EXISTS accounts (
+      id SERIAL PRIMARY KEY,
+      account_id TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      token TEXT,
+      name TEXT,
+      icon INTEGER DEFAULT 0
+    )`);
 
-  await db.exec(`CREATE TABLE IF NOT EXISTS accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    accountId TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    token TEXT,
-    name TEXT,
-    icon INTEGER DEFAULT 0
-  )`);
+    // Create ranking table
+    await pool.query(`CREATE TABLE IF NOT EXISTS ranking (
+      id SERIAL PRIMARY KEY,
+      song_title TEXT NOT NULL,
+      difficulty INTEGER NOT NULL,
+      chart_hash TEXT NOT NULL,
+      account_id TEXT,
+      score INTEGER,
+      ab_count INTEGER DEFAULT 0,
+      date TEXT NOT NULL,
+      UNIQUE(song_title, difficulty, chart_hash, account_id)
+    )`);
 
-  await db.exec(`CREATE TABLE IF NOT EXISTS ranking (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    songTitle TEXT NOT NULL,
-    difficulty INTEGER NOT NULL,
-    chartHash TEXT NOT NULL,
-    accountId TEXT,
-    score INTEGER,
-    abCount INTEGER DEFAULT 0,
-    date TEXT NOT NULL,
-    UNIQUE(songTitle, difficulty, chartHash, accountId)
-  )`);
-
-  return db;
+    console.log("Database tables initialized successfully");
+  } catch (error) {
+    console.error("Error initializing database:", error);
+    throw error;
+  }
 }
 
-module.exports = { dbPromise, initializeDatabase };
+async function getClient() {
+  const client = await pool.connect();
+  return client;
+}
+
+// Helper function to execute queries
+async function query(text, params) {
+  try {
+    const result = await pool.query(text, params);
+    return result;
+  } catch (error) {
+    console.error("Query error:", error);
+    throw error;
+  }
+}
+
+module.exports = {
+  pool,
+  initializeDatabase,
+  getClient,
+  query,
+};
