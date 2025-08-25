@@ -9,6 +9,7 @@ const likeRoutes = require("./routes/likeRoutes.js");
 const accountRoutes = require("./routes/accountRoutes.js");
 const rankingRoutes = require("./routes/rankingRoutes.js");
 const pageRoutes = require("./routes/pageRoutes.js");
+const accountLoginRoute = require("./routes/accountLoginRoutes.js");
 const { initializeDatabase } = require("./database.js");
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/contents", contentRoutes);
 app.use("/votes", voteRoutes);
 app.use("/likes", likeRoutes);
 app.use("/accounts", accountRoutes);
+app.use("/accountLogin", accountLoginRoute);
 app.use("/ranking", rankingRoutes);
 app.use('/', pageRoutes);
 
