@@ -7,3 +7,4 @@ node_modules/*
 .netlify
 .env
 src/database/charts.db
+.vercel
