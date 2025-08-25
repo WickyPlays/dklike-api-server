@@ -43,10 +43,10 @@ app.get("/support", async (req, res) => {
   });
 });
 
-// const EXPRESS_PORT = process.env.PORT || 3000;
+const EXPRESS_PORT = process.env.PORT || 3000;
 
-// app.listen(EXPRESS_PORT, () => {
-//   console.log("[DKLikeAPI] Server running");
-// });
+app.listen(EXPRESS_PORT, () => {
+  console.log("[DKLikeAPI] Server running");
+});
 
 module.exports = app;
